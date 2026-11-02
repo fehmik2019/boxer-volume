@@ -39,16 +39,15 @@ Pure white background, soft studio lighting, subtle shadow underneath, high-end 
                 }
             )
 
-            # On renvoie TOUTE la réponse de l'API pour voir ce qu'elle contient
-            try:
-                data = response.json()
-            except:
-                data = {"raw": response.text}
+            data = response.json()
 
-            return {
-                "status_code": response.status_code,
-                "response": data
-            }
+            if response.status_code != 200 or "data" not in data:
+                return JSONResponse(
+                    status_code=response.status_code or 500,
+                    content={"error": data}
+                )
+
+            return {"url": data["data"][0]["url"]}
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
