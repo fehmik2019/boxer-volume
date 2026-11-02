@@ -17,19 +17,27 @@ async def process_image(
         return JSONResponse(status_code=500, content={"error": "XAI_API_KEY manquante"})
 
     try:
-        # Image A (motif)
         pattern_bytes = await pattern_image.read()
         pattern_b64 = base64.b64encode(pattern_bytes).decode("utf-8")
 
-        # Image B (forme / volume)
         shape_bytes = await shape_image.read()
         shape_b64 = base64.b64encode(shape_bytes).decode("utf-8")
 
-        prompt = """Take the exact pattern, colors, and branding from the first image (the flat boxer shorts).
-Apply the realistic 3D volume, shape, front pouch, fabric draping, and overall form from the second image (the blue volumetric reference).
-Create a professional product photo of the patterned boxer with the same strong volume and shaping as the reference.
-Keep the original pattern perfectly recognizable.
-Pure white background, soft studio lighting, subtle shadow underneath, front view, high-end e-commerce style."""
+        prompt = """CRITICAL TASK: Shape transfer / morphing.
+
+Image 1 = source pattern (flat boxer shorts with flamingos and flowers).
+Image 2 = target shape and topology (volumetric blue boxer with strong 3D form and front pouch).
+
+Warp and deform the exact pattern of Image 1 so that it perfectly follows the 3D topology, volume, fabric tension, and shape of Image 2.
+
+Requirements:
+- The front pouch must have the same pronounced rounded volume as Image 2
+- The fabric must follow the same folds, seams, and 3D curvature as the reference
+- Leg openings and waistband must match the shape of Image 2
+- Keep the original pattern, colors, and branding 100% recognizable
+- Result must look like a real product photo with strong volume, not a flat image
+- Pure white background, soft studio lighting, subtle shadow
+- Front view, high-end e-commerce quality"""
 
         async with httpx.AsyncClient(timeout=120) as client:
             response = await client.post(
@@ -42,14 +50,8 @@ Pure white background, soft studio lighting, subtle shadow underneath, front vie
                     "model": "grok-imagine-image-2.0",
                     "prompt": prompt,
                     "images": [
-                        {
-                            "url": f"data:image/jpeg;base64,{pattern_b64}",
-                            "type": "image_url"
-                        },
-                        {
-                            "url": f"data:image/jpeg;base64,{shape_b64}",
-                            "type": "image_url"
-                        }
+                        {"type": "image_url", "url": f"data:image/jpeg;base64,{pattern_b64}"},
+                        {"type": "image_url", "url": f"data:image/jpeg;base64,{shape_b64}"}
                     ]
                 }
             )
