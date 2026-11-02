@@ -9,44 +9,56 @@
         img { max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         button { background: #0066ff; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; }
         button:disabled { opacity: 0.6; }
+        label { display: block; margin: 15px 0 5px; font-weight: 500; }
     </style>
 </head>
 <body>
     <h1>Transformer un boxer à plat en photo produit 3D</h1>
-    <input type="file" id="imageInput" accept="image/*">
+
+    <label>Image A – Motif (boxer à plat)</label>
+    <input type="file" id="patternInput" accept="image/*">
+
+    <label>Image B – Forme / Volume (référence)</label>
+    <input type="file" id="shapeInput" accept="image/*">
+
     <br><br>
     <button id="btn" onclick="process()">Générer la version en volume</button>
     <div class="result" id="result"></div>
 
     <script>
-       async function process() {
-    const file = document.getElementById("imageInput").files[0];
-    if (!file) return alert("Choisis une image");
+        async function process() {
+            const patternFile = document.getElementById("patternInput").files[0];
+            const shapeFile = document.getElementById("shapeInput").files[0];
 
-    const btn = document.getElementById("btn");
-    const result = document.getElementById("result");
-    btn.disabled = true;
-    result.innerHTML = "Génération en cours… (30-60 secondes)";
+            if (!patternFile || !shapeFile) {
+                return alert("Choisis les deux images");
+            }
 
-    const formData = new FormData();
-    formData.append("file", file);
+            const btn = document.getElementById("btn");
+            const result = document.getElementById("result");
+            btn.disabled = true;
+            result.innerHTML = "Génération en cours… (30-60 secondes)";
 
-    try {
-        const res = await fetch("/process", { method: "POST", body: formData });
-        const data = await res.json();
+            const formData = new FormData();
+            formData.append("pattern_image", patternFile);
+            formData.append("shape_image", shapeFile);
 
-        if (data.error) {
-            result.innerHTML = "<pre>" + JSON.stringify(data.error, null, 2) + "</pre>";
-        } else if (data.url) {
-            result.innerHTML = `<img src="${data.url}" alt="Résultat" style="max-width:100%;">`;
-        } else {
-            result.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+            try {
+                const res = await fetch("/process", { method: "POST", body: formData });
+                const data = await res.json();
+
+                if (data.error) {
+                    result.innerHTML = "<pre>" + JSON.stringify(data.error, null, 2) + "</pre>";
+                } else if (data.url) {
+                    result.innerHTML = `<img src="${data.url}" alt="Résultat">`;
+                } else {
+                    result.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+                }
+            } catch (e) {
+                result.innerHTML = "Erreur : " + e.message;
+            }
+            btn.disabled = false;
         }
-    } catch (e) {
-        result.innerHTML = "Erreur : " + e.message;
-    }
-    btn.disabled = false;
-}
     </script>
 </body>
 </html>
