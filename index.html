@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Boxer en Volume - AI</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+        .result { margin-top: 30px; text-align: center; }
+        img { max-width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        button { background: #0066ff; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        button:disabled { opacity: 0.6; }
+    </style>
+</head>
+<body>
+    <h1>Transformer un boxer à plat en photo produit 3D</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <br><br>
+    <button id="btn" onclick="process()">Générer la version en volume</button>
+    <div class="result" id="result"></div>
+
+    <script>
+        async function process() {
+            const file = document.getElementById("imageInput").files[0];
+            if (!file) return alert("Choisis une image");
+
+            const btn = document.getElementById("btn");
+            const result = document.getElementById("result");
+            btn.disabled = true;
+            result.innerHTML = "Génération en cours… (30-60 secondes)";
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const res = await fetch("/process", { method: "POST", body: formData });
+                const data = await res.json();
+                result.innerHTML = `<img src="${data.url}" alt="Résultat">`;
+            } catch (e) {
+                result.innerHTML = "Erreur : " + e.message;
+            }
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
