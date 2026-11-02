@@ -19,27 +19,32 @@
     <div class="result" id="result"></div>
 
     <script>
-        async function process() {
-            const file = document.getElementById("imageInput").files[0];
-            if (!file) return alert("Choisis une image");
+       async function process() {
+    const file = document.getElementById("imageInput").files[0];
+    if (!file) return alert("Choisis une image");
 
-            const btn = document.getElementById("btn");
-            const result = document.getElementById("result");
-            btn.disabled = true;
-            result.innerHTML = "Génération en cours… (30-60 secondes)";
+    const btn = document.getElementById("btn");
+    const result = document.getElementById("result");
+    btn.disabled = true;
+    result.innerHTML = "Génération en cours… (30-60 secondes)";
 
-            const formData = new FormData();
-            formData.append("file", file);
+    const formData = new FormData();
+    formData.append("file", file);
 
-            try {
-                const res = await fetch("/process", { method: "POST", body: formData });
-                const data = await res.json();
-                result.innerHTML = `<img src="${data.url}" alt="Résultat">`;
-            } catch (e) {
-                result.innerHTML = "Erreur : " + e.message;
-            }
-            btn.disabled = false;
+    try {
+        const res = await fetch("/process", { method: "POST", body: formData });
+        const data = await res.json();
+
+        if (data.error) {
+            result.innerHTML = "Erreur : " + JSON.stringify(data.error);
+        } else {
+            result.innerHTML = `<img src="${data.image}" alt="Résultat">`;
         }
+    } catch (e) {
+        result.innerHTML = "Erreur : " + e.message;
+    }
+    btn.disabled = false;
+}
     </script>
 </body>
 </html>
