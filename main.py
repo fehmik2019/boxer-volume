@@ -9,18 +9,27 @@ app = FastAPI()
 XAI_API_KEY = os.getenv("XAI_API_KEY")
 
 @app.post("/process")
-async def process_image(file: UploadFile = File(...)):
+async def process_image(
+    pattern_image: UploadFile = File(...),
+    shape_image: UploadFile = File(...)
+):
     if not XAI_API_KEY:
         return JSONResponse(status_code=500, content={"error": "XAI_API_KEY manquante"})
 
     try:
-        contents = await file.read()
-        base64_image = base64.b64encode(contents).decode("utf-8")
+        # Image A (motif)
+        pattern_bytes = await pattern_image.read()
+        pattern_b64 = base64.b64encode(pattern_bytes).decode("utf-8")
 
-        prompt = """Transform this flat-laid boxer shorts into a professional 3D product photography mockup with realistic volume and form. 
-Give it a shaped front pouch with volume, natural fabric draping and folds, defined leg openings, and a slightly curved waistband. 
-Keep the exact pattern, colors, and waistband branding. 
-Pure white background, soft studio lighting, subtle shadow underneath, high-end product photo style, front view."""
+        # Image B (forme / volume)
+        shape_bytes = await shape_image.read()
+        shape_b64 = base64.b64encode(shape_bytes).decode("utf-8")
+
+        prompt = """Take the exact pattern, colors, and branding from the first image (the flat boxer shorts).
+Apply the realistic 3D volume, shape, front pouch, fabric draping, and overall form from the second image (the blue volumetric reference).
+Create a professional product photo of the patterned boxer with the same strong volume and shaping as the reference.
+Keep the original pattern perfectly recognizable.
+Pure white background, soft studio lighting, subtle shadow underneath, front view, high-end e-commerce style."""
 
         async with httpx.AsyncClient(timeout=120) as client:
             response = await client.post(
@@ -32,10 +41,16 @@ Pure white background, soft studio lighting, subtle shadow underneath, high-end 
                 json={
                     "model": "grok-imagine-image-2.0",
                     "prompt": prompt,
-                    "image": {
-                        "url": f"data:image/jpeg;base64,{base64_image}",
-                        "type": "image_url"
-                    }
+                    "images": [
+                        {
+                            "url": f"data:image/jpeg;base64,{pattern_b64}",
+                            "type": "image_url"
+                        },
+                        {
+                            "url": f"data:image/jpeg;base64,{shape_b64}",
+                            "type": "image_url"
+                        }
+                    ]
                 }
             )
 
