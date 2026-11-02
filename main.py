@@ -32,6 +32,7 @@ Pure white background, soft studio lighting, subtle shadow underneath, high-end 
                 json={
                     "model": "grok-imagine-image-2.0",
                     "prompt": prompt,
+                    "response_format": "b64_json",
                     "image": {
                         "url": f"data:image/jpeg;base64,{base64_image}",
                         "type": "image_url"
@@ -39,23 +40,17 @@ Pure white background, soft studio lighting, subtle shadow underneath, high-end 
                 }
             )
 
-            # On récupère le vrai contenu de la réponse
-            try:
-                data = response.json()
-            except:
-                return JSONResponse(
-                    status_code=500,
-                    content={"error": f"Réponse non-JSON : {response.text[:500]}"}
-                )
+            data = response.json()
 
-            # Si erreur API
             if response.status_code != 200 or "data" not in data:
                 return JSONResponse(
                     status_code=response.status_code or 500,
                     content={"error": data}
                 )
 
-            return {"url": data["data"][0]["url"]}
+            # On renvoie le base64 directement
+            b64 = data["data"][0]["b64_json"]
+            return {"image": f"data:image/jpeg;base64,{b64}"}
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
