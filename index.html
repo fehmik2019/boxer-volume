@@ -26,7 +26,7 @@
     const btn = document.getElementById("btn");
     const result = document.getElementById("result");
     btn.disabled = true;
-    result.innerHTML = "Génération en cours…";
+    result.innerHTML = "Génération en cours… (30-60 secondes)";
 
     const formData = new FormData();
     formData.append("file", file);
@@ -34,7 +34,14 @@
     try {
         const res = await fetch("/process", { method: "POST", body: formData });
         const data = await res.json();
-        result.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+
+        if (data.error) {
+            result.innerHTML = "<pre>" + JSON.stringify(data.error, null, 2) + "</pre>";
+        } else if (data.url) {
+            result.innerHTML = `<img src="${data.url}" alt="Résultat" style="max-width:100%;">`;
+        } else {
+            result.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+        }
     } catch (e) {
         result.innerHTML = "Erreur : " + e.message;
     }
